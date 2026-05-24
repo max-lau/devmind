@@ -1,28 +1,30 @@
 import os
-import json
-import requests
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 
 load_dotenv()
 
-API_KEY = os.getenv("OPENAI_API_KEY")
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0.1,
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
-def call_llm(system_prompt: str, user_message: str, temperature: float = 0.1) -> str:
-    response = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers={"Authorization": f"Bearer {API_KEY}"},
-        json={
-            "model": "gpt-4o-mini",
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_message}
-            ],
-            "temperature": temperature
-        }
-    )
-    return response.json()["choices"][0]["message"]["content"]
+def call_llm(system_prompt: str, user_message: str) -> str:
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{{input}}")
+    ], template_format="jinja2")
+    chain = prompt | llm | StrOutputParser()
+    return chain.invoke({"input": user_message})
 
 
 def call_llm_json(system_prompt: str, user_message: str) -> dict:
-    raw = call_llm(system_prompt, user_message, temperature=0.1)
-    return json.loads(raw)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{{input}}")
+    ], template_format="jinja2")
+    chain = prompt | llm | JsonOutputParser()
+    return chain.invoke({"input": user_message})
