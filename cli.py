@@ -131,5 +131,47 @@ def bug(
     console.print(Panel(Markdown(result["analysis"]), title="Bug Analysis"))
 
 
+@app.command()
+def pipeline(
+    file: str = typer.Argument(..., help="Path to Python file to run full pipeline on"),
+):
+    """Run the full 4-agent pipeline: review, docs, triage, and sprint planning."""
+    if not Path(file).exists():
+        console.print(f"[red]File not found: {file}[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"\n[bold blue]Starting full pipeline for {file}...[/bold blue]\n")
+
+    with console.status("[bold green]Submitting pipeline job..."):
+        response = httpx.post(
+            f"{BASE_URL}/pipeline/analyze",
+            json={"file_path": file},
+            timeout=30
+        )
+
+    job = response.json()
+    job_id = job["job_id"]
+    console.print(f"[dim]Job ID: {job_id}[/dim]")
+    console.print("[yellow]Pipeline running in background...[/yellow]\n")
+
+    import time
+    with console.status("[bold green]Waiting for agents to complete..."):
+        for _ in range(60):
+            time.sleep(3)
+            poll = httpx.get(f"{BASE_URL}/pipeline/jobs/{job_id}", timeout=10)
+            status = poll.json().get("status")
+            if status == "completed":
+                break
+            if status == "failed":
+                console.print(f"[red]Pipeline failed: {poll.json().get('error')}[/red]")
+                raise typer.Exit(1)
+
+    result = poll.json().get("result", {})
+
+    console.print(Panel("[bold green]Pipeline Complete[/bold green]", title="DevMind"))
+    console.print(Panel(Markdown(result.get("code_review", "")),    title="Code Review"))
+    console.print(Panel(Markdown(result.get("bug_triage", "")),     title="Bug Triage"))
+    console.print(Panel(Markdown(result.get("sprint_backlog", "")), title="Sprint Backlog"))
+
 if __name__ == "__main__":
     app()
