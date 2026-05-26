@@ -24,17 +24,16 @@ def _run_pipeline_job(job_id: str, code: str, filename: str):
 
 @router.post("/analyze", response_model=JobResponse)
 def run_pipeline(request: PipelineRequest, background_tasks: BackgroundTasks):
-    path = Path(request.file_path)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
     if not request.file_path.endswith(".py"):
         raise HTTPException(status_code=400, detail="Only Python files supported")
 
+    path = Path(request.file_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
+
     code = path.read_text(encoding="utf-8")
     job_id = create_job()
-
     background_tasks.add_task(_run_pipeline_job, job_id, code, request.file_path)
-
     return {
         "job_id": job_id,
         "status": "pending",
