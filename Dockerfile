@@ -21,8 +21,17 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Create non-root user
+RUN adduser --disabled-password --gecos "" devmind
+
 # Copy the rest of the application
 COPY . .
+
+# Give the non-root user ownership
+RUN chown -R devmind:devmind /app
+
+# Switch to non-root user
+USER devmind
 
 # Expose the port FastAPI runs on
 EXPOSE 8000
