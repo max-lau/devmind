@@ -4,6 +4,11 @@ from fastapi.security.api_key import APIKeyHeader
 
 from app.routers import review, codebase, docs_gen, bugs, pipeline, github
 
+from app.logger import logger, setup_sentry
+
+setup_sentry()
+
+
 # --- Auth setup ---
 API_KEY = os.getenv("DEVMIND_API_KEY", "dev-local-key")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -29,6 +34,15 @@ app.include_router(docs_gen.router, dependencies=[Security(require_api_key)])
 app.include_router(bugs.router, dependencies=[Security(require_api_key)])
 app.include_router(pipeline.router, dependencies=[Security(require_api_key)])
 app.include_router(github.router, dependencies=[Security(require_api_key)])
+
+@app.middleware("http")
+async def log_requests(request, call_next):
+    import time
+    start = time.time()
+    response = await call_next(request)
+    duration = round((time.time() - start) * 1000)
+    logger.info(f"{request.method} {request.url.path} → {response.status_code} ({duration}ms)")
+    return response
 
 @app.get("/")
 def root():
