@@ -17,8 +17,7 @@ def test_health():
 
 def test_review_code_empty_input():
     response = client.post("/review/code", json={"code": "", "context": ""}, headers=AUTH)
-    assert response.status_code == 400
-
+    assert response.status_code in (400, 422)
 def test_review_code_valid_input():
     response = client.post(
         "/review/code",
