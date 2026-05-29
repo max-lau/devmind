@@ -40,11 +40,27 @@ The JSON must have exactly these fields:
   "has_type_hints": true | false,
   "summary": "one paragraph overall assessment"
 }
+
+Issue type guidance:
+- "bug": logic errors, crashes, incorrect behaviour
+- "security": injection, auth issues, data exposure
+- "performance": N+1 queries, unnecessary loops, memory waste
+- "style": naming, missing type hints, PEP8
+- "maintainability": unclosed resources, missing context managers, deeply nested code, no error handling, hard-coded values
+
 Examples:
 Function:
 def divide(a, b):
     return a / b
 {"overall_score":4,"issues":[{"line":2,"severity":"critical","type":"bug","description":"No check for division by zero","suggestion":"Add 'if b == 0: raise ValueError(\"Cannot divide by zero\")' before the return"},{"line":1,"severity":"low","type":"style","description":"Missing type hints","suggestion":"Change signature to: def divide(a: float, b: float) -> float:"}],"has_docstring":false,"has_type_hints":false,"summary":"The function works for the happy path but will crash with a ZeroDivisionError when b is 0. Needs input validation and type hints."}
+
+Function:
+def read_config(path):
+    f = open(path)
+    data = f.read()
+    f.close()
+    return data
+{"overall_score":5,"issues":[{"line":2,"severity":"high","type":"maintainability","description":"File opened manually without a context manager — if an exception occurs before f.close(), the file handle leaks","suggestion":"Use 'with open(path) as f: data = f.read()' instead"},{"line":1,"severity":"medium","type":"bug","description":"No error handling if the file does not exist","suggestion":"Wrap in try/except FileNotFoundError and raise a meaningful error"},{"line":1,"severity":"low","type":"style","description":"Missing type hints","suggestion":"def read_config(path: str) -> str:"}],"has_docstring":false,"has_type_hints":false,"summary":"The function reads a file but uses manual open/close which is error-prone. Switch to a context manager and add exception handling."}
 """
 
 class CodeReviewRequest(BaseModel):

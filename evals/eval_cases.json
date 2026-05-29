@@ -1,0 +1,63 @@
+[
+  {
+  "id": "div-zero",
+  "description": "Division by zero — no guard",
+  "code": "def divide(a, b):\n    return a / b",
+  "expect": {
+    "max_score": 6,
+    "required_issues": ["bug", "style"],
+    "forbidden_severities": [],
+    "has_docstring": false,
+    "has_type_hints": false
+  }
+},
+  {
+    "id": "sql-injection",
+    "description": "SQL injection via string formatting",
+    "code": "import sqlite3\n\ndef get_user(username):\n    conn = sqlite3.connect('app.db')\n    cursor = conn.cursor()\n    cursor.execute(f\"SELECT * FROM users WHERE name = '{username}'\")\n    return cursor.fetchone()",
+    "expect": {
+      "max_score": 5,
+      "required_issues": ["security"],
+      "forbidden_severities": [],
+      "has_docstring": false,
+      "has_type_hints": false
+    }
+  },
+  {
+    "id": "good-function",
+    "description": "Well-written function — should score high",
+    "code": "def add(a: int, b: int) -> int:\n    \"\"\"Return the sum of two integers.\"\"\"\n    return a + b",
+    "expect": {
+      "max_score": 10,
+      "min_score": 7,
+      "required_issues": [],
+      "forbidden_severities": ["critical", "high"],
+      "has_docstring": true,
+      "has_type_hints": true
+    }
+  },
+  {
+  "id": "no-error-handling",
+  "description": "File read with no error handling",
+  "code": "def read_config(path):\n    f = open(path)\n    data = f.read()\n    f.close()\n    return data",
+  "expect": {
+    "max_score": 6,
+    "required_issues": ["bug", "style"],
+    "forbidden_severities": [],
+    "has_docstring": false,
+    "has_type_hints": false
+  }
+},
+  {
+  "id": "n-plus-one",
+  "description": "N+1 query pattern in a loop",
+  "code": "def get_all_user_emails(user_ids, db):\n    emails = []\n    for uid in user_ids:\n        user = db.query(f'SELECT email FROM users WHERE id={uid}')\n        emails.append(user['email'])\n    return emails",
+  "expect": {
+    "max_score": 5,
+    "required_issues": ["security"],
+    "forbidden_severities": [],
+    "has_docstring": false,
+    "has_type_hints": false
+  }
+}
+]
