@@ -1,4 +1,4 @@
-﻿import os
+import os
 from fastapi import FastAPI, Security, HTTPException, status
 from fastapi.security.api_key import APIKeyHeader
 from app.routers import review, codebase, docs_gen, bugs, pipeline, github, agile
@@ -14,7 +14,7 @@ def require_api_key(key: str = Security(api_key_header)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API key")
     return key
 
-app = FastAPI(title="DevMind API", description="AI-powered developer productivity tools", version="0.6.0")
+app = FastAPI(title="DevMind API", description="AI-powered developer productivity tools", version="1.0.0")
 
 app.include_router(review.router, dependencies=[Security(require_api_key)])
 app.include_router(codebase.router, dependencies=[Security(require_api_key)])
@@ -35,10 +35,8 @@ async def log_requests(request, call_next):
 
 @app.get("/")
 def root():
-    return {"status": "DevMind API is running", "version": "0.6.0"}
+    return {"status": "DevMind API is running", "version": "1.0.0"}
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "0.6.0"}
-
-
+    return {"status": "ok", "version": "1.0.0"}
