@@ -51,7 +51,7 @@
   {
   "id": "n-plus-one",
   "description": "N+1 query pattern in a loop",
-  "code": "def get_all_user_emails(user_ids, db):\n    emails = []\n    for uid in user_ids:\n        user = db.query(f'SELECT email FROM users WHERE id={uid}')\n        emails.append(user['email'])\n    return emails",
+  "code": "def get_all_user_emails(user_ids, db):\n    emails = []\n    for uid in user_ids:\n        user = db.query('SELECT email FROM users WHERE id=' + str(uid))\n        emails.append(user['email'])\n    return emails",
   "expect": {
     "max_score": 5,
     "required_issues": ["security"],

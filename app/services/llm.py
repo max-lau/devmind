@@ -1,5 +1,7 @@
 import os
 import time
+import json
+import re
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -32,8 +34,20 @@ def call_llm_json(system_prompt: str, user_message: str) -> dict:
         ("system", system_prompt),
         ("human", "{{input}}")
     ], template_format="jinja2")
-    chain = prompt | llm | JsonOutputParser()
-    result = chain.invoke({"input": user_message})
+    chain = prompt | llm | StrOutputParser()
+    raw = chain.invoke({"input": user_message})
     duration = round((time.time() - start) * 1000)
     logger.info(f"LLM JSON call completed | model=gpt-4o-mini | duration={duration}ms | chars_in={len(user_message)}")
-    return result
+    # Strip markdown fences if present
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        # Replace any unescaped double quotes inside string values with single quotes
+        raw = re.sub(r'(?<=[^\\])"(?=[^,\}\]\{:]+[^\\]")', "'", raw)
+        return json.loads(raw)
